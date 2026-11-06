@@ -1,2 +1,4 @@
 # ignore app cache folder
 .cache/
+laptop/data/
+laptop/frames/
