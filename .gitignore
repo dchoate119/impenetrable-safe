@@ -2,3 +2,4 @@
 .cache/
 laptop/data/
 laptop/frames/
+__pycache__/
