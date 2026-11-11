@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Impenetrable Safe</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 40px; }
+    button { font-size: 24px; padding: 16px 32px; margin: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Impenetrable Safe</h1>
+  <p>Angle: <span id="angle">?</span>°</p>
+  <button id="open">Open (30°)</button>
+  <button id="reset">Reset (110°)</button>
+
+  <script src="libs/socket.io.min.js"></script>
+  <script src="libs/arduino.js"></script>
+  <script>
+    const ui = new WebUI();
+    document.getElementById('open').onclick = () => ui.send_message('open');
+    document.getElementById('reset').onclick = () => ui.send_message('reset');
+    ui.on_message('angle', d => document.getElementById('angle').textContent = d.angle);
+  </script>
+</body>
+</html>
