@@ -1,15 +1,16 @@
 import time
 
-from arduino.app_utils import App
+from arduino.app_utils import App, Bridge
 
-print("Hello world!")
+# Servo test: step through a few angles, then repeat
+ANGLES = [0, 90, 180, 90]
 
 
 def loop():
-    """This function is called repeatedly by the App framework."""
-    # You can replace this with any code you want your App to run repeatedly.
-    time.sleep(10)
+    for angle in ANGLES:
+        print(f"servo {angle}")
+        Bridge.call("servo", angle)
+        time.sleep(2)
 
 
-# See: https://docs.arduino.cc/software/app-lab/tutorials/getting-started/#app-run
 App.run(user_loop=loop)
