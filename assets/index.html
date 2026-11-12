@@ -5,23 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Impenetrable Safe</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 40px; }
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    img { width: 100%; max-width: 640px; background: #222; aspect-ratio: 4 / 3; }
+    #digit { font-size: 64px; font-weight: bold; margin: 8px; }
+    .bars { display: inline-block; text-align: left; }
+    .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+    .bar { height: 16px; background: #bbb; width: 0; }
+    .bar.top { background: #2a2; }
     button { font-size: 24px; padding: 16px 32px; margin: 10px; }
+    #status { display: inline-block; font-size: 32px; font-weight: bold; padding: 8px 24px;
+              border-radius: 8px; color: white; margin-bottom: 8px; }
+    #status.locked { background: #555; }
+    #status.open { background: #2a2; }
+    #status.wrong { background: #c22; }
+    #dots { font-size: 40px; letter-spacing: 12px; }
+    .hold { width: 240px; height: 10px; background: #ddd; margin: 6px auto; border-radius: 5px; overflow: hidden; }
+    #hold { height: 100%; width: 0; background: #2a2; }
+    #hint { color: #666; margin: 4px; }
   </style>
 </head>
 <body>
   <h1>Impenetrable Safe</h1>
-  <p>Angle: <span id="angle">?</span>°</p>
-  <button id="open">Open (30°)</button>
-  <button id="reset">Reset (110°)</button>
+  <div id="status" class="locked">LOCKED</div>
+  <div id="dots"></div>
+  <div class="hold"><div id="hold"></div></div>
+  <p id="hint">Hold a digit for 1 s</p>
+  <img id="cam" alt="camera">
+  <div id="digit">?</div>
+  <div class="bars" id="bars"></div>
+  <p><span id="fps">0</span> fps &middot; servo angle: <span id="angle">?</span>°</p>
+  <button id="open">Open</button>
+  <button id="reset">Close</button>
 
   <script src="libs/socket.io.min.js"></script>
   <script src="libs/arduino.js"></script>
   <script>
     const ui = new WebUI();
-    document.getElementById('open').onclick = () => ui.send_message('open');
-    document.getElementById('reset').onclick = () => ui.send_message('reset');
-    ui.on_message('angle', d => document.getElementById('angle').textContent = d.angle);
+    const $ = id => document.getElementById(id);
+
+    const bars = [];
+    for (let c = 0; c < 6; c++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<span>${c}</span><div class="bar"></div>`;
+      $('bars').appendChild(row);
+      bars.push(row.querySelector('.bar'));
+    }
+
+    ui.on_message('frame', d => {
+      $('cam').src = 'data:image/jpeg;base64,' + d.jpeg;
+      const top = d.probs.indexOf(Math.max(...d.probs));
+      $('digit').textContent = (top === 0 ? 'fist' : top) + '  ' + Math.round(d.probs[top] * 100) + '%';
+      d.probs.forEach((p, c) => {
+        bars[c].style.width = (p * 200) + 'px';
+        bars[c].classList.toggle('top', c === top);
+      });
+      $('fps').textContent = d.fps;
+
+      const labels = { locked: 'LOCKED', open: 'OPEN', wrong: 'WRONG CODE' };
+      $('status').textContent = labels[d.status];
+      $('status').className = d.status;
+      $('dots').textContent = '●'.repeat(d.entered) + '○'.repeat(d.code_len - d.entered);
+      $('hold').style.width = (d.progress * 100) + '%';
+      $('hint').textContent =
+        d.status === 'open' ? 'Press Close to lock' :
+        d.status === 'wrong' ? 'Try again in a moment' :
+        d.armed ? 'Hold a digit for 1 s' : 'Make a fist for the next digit';
+    });
+
+    $('open').onclick = () => ui.send_message('open');
+    $('reset').onclick = () => ui.send_message('reset');
+    ui.on_message('angle', d => $('angle').textContent = d.angle);
   </script>
 </body>
 </html>
