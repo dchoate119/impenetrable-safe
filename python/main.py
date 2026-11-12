@@ -10,7 +10,7 @@ from arduino.app_bricks.web_ui import WebUI
 from arduino.app_peripherals.camera import Camera
 from arduino.app_utils import App, Bridge
 
-CODE = [2, 5, 4]
+CODE = [5, 4, 1]
 
 CLOSED_ANGLE = 170
 OPEN_ANGLE = 90
